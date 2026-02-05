@@ -1,5 +1,6 @@
 from .models import Job
 
+
 def create_job(title, description, salary, country, status, external_id=None) -> Job:
     external_id = external_id.strip() if external_id else None
     if external_id:
@@ -13,5 +14,5 @@ def create_job(title, description, salary, country, status, external_id=None) ->
         salary=salary,
         country=country,
         status=status,
-        external_id=external_id
+        external_id=external_id,
     )

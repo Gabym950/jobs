@@ -17,10 +17,14 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path
+
 from apps.jobs.views import JobView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("jobs/", JobView.as_view({"get": "list", "post": "create"})),
-    path("jobs/<int:pk>/", JobView.as_view({"get": "retrieve", "patch": "partial_update", "delete": "destroy"})),
+    path(
+        "jobs/<int:pk>/",
+        JobView.as_view({"get": "retrieve", "patch": "partial_update", "delete": "destroy"}),
+    ),
 ]
