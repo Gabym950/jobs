@@ -16,6 +16,7 @@ class StatusChoices(models.TextChoices):
 
 class Job(models.Model):
     title = models.CharField(max_length=200)
+    external_id = models.CharField(max_length=100, null=True, blank=True, db_index=True)
     description = models.TextField()
     salary = models.DecimalField(
         max_digits=10, decimal_places=2, null=True, blank=True

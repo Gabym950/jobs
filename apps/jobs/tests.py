@@ -14,7 +14,8 @@ def test_create_job_success(client):
         "description": "Develop and maintain software applications.",
         "salary": 90000,
         "country": "US",
-        "status": "OPEN"
+        "status": "OPEN",
+        "external_id": "SE-001"
     }
     response = client.post("/jobs/", data=payload, format="json")
     assert response.status_code == 201
@@ -36,13 +37,6 @@ def test_create_job_invalid_country_choice(client):
     response = client.post("/jobs/", data=payload, format="json")
     assert response.status_code == 400
     assert "country" in response.data
-
-
-	# 3.	GET list (200 + devuelve items)
-	# 4.	GET detail (200)
-	# 5.	PATCH update OK (200 + cambia en DB)
-	# 6.	PATCH con choice inválida (400)
-	# 7.	DELETE (204)
 
 
 @pytest.mark.django_db
@@ -92,3 +86,25 @@ def test_delete_job_returns_204(client):
     response = client.delete(f"/jobs/{job.id}/")
     assert response.status_code == 204
     assert not Job.objects.filter(pk=job.id).exists()
+
+@pytest.mark.django_db
+def test_create_job_with_existing_external_id_returns_existing_job(client):
+    existing_job = Job.objects.create(
+        title="Existing Job",
+        description="Already exists",
+        salary=75000,
+        country="US",
+        external_id="SE-001"
+    )
+    payload = {
+        "title": "New Job",
+        "description": "New job description",
+        "salary": 80000,
+        "country": "CA",
+        "status": "OPEN",
+        "external_id": existing_job.external_id
+    }
+    response = client.post("/jobs/", data=payload, format="json")
+    assert response.status_code == 201
+    assert response.data["id"] == existing_job.id
+    assert response.data["title"] == existing_job.title
