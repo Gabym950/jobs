@@ -2,7 +2,7 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 
 from .models import Job
-from .serializer import JobSerializer
+from .serializers import JobSerializer
 
 
 class JobView(viewsets.ModelViewSet):
@@ -10,8 +10,9 @@ class JobView(viewsets.ModelViewSet):
     serializer_class = JobSerializer
     http_method_names = ["get", "post", "head", "patch", "delete"]
 
-    def search(self, request):
-        query = request.query_params.get("q", "")
-        jobs = Job.objects.filter(title__icontains=query)
-        serializer = JobSerializer(jobs, many=True)
-        return Response(serializer.data)
+    def get_queryset(self):
+        queryset = Job.objects.filter(status="OPEN")
+        query = self.request.query_params.get("q", None).strip()
+        if query:
+            queryset = queryset.filter(title__icontains=query)  
+        return queryset
