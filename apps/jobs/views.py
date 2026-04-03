@@ -13,7 +13,7 @@ class JobView(viewsets.ModelViewSet):
     filter_backends = (
         filters.DjangoFilterBackend,
     )
-    filterset_fields = ("status", "company")
+    filterset_fields = ("status",)
     http_method_names = ["get", "post", "head", "patch", "delete"]
 
     def get_queryset(self):

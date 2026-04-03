@@ -1,7 +1,9 @@
 import pytest
+from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
+from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import Job
+from ..models import Job, CountryChoices, StatusChoices
 
 
 @pytest.fixture
@@ -9,8 +11,26 @@ def client():
     return APIClient()
 
 
+@pytest.fixture
+def user(db):
+    User = get_user_model()
+    return User.objects.create_user(username="testuser", password="password", email="testuser@example.com")
+
+
+@pytest.fixture
+def auth_client(client, user):
+    token = RefreshToken.for_user(user)
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {token.access_token}")
+    return client
+
+
+@pytest.fixture
+def api_client(auth_client):
+    return auth_client
+
+
 @pytest.mark.django_db
-def test_create_job_success(client):
+def test_create_job_success(auth_client):
     payload = {
         "title": "Software Engineer",
         "description": "Develop and maintain software applications.",
@@ -19,7 +39,7 @@ def test_create_job_success(client):
         "status": "OPEN",
         "external_id": "SE-001",
     }
-    response = client.post("/jobs/", data=payload, format="json")
+    response = auth_client.post("/jobs/", data=payload, format="json")
     assert response.status_code == 201
     assert response.data["title"] == payload["title"]
     assert response.data["description"] == payload["description"]
@@ -29,7 +49,7 @@ def test_create_job_success(client):
 
 
 @pytest.mark.django_db
-def test_create_job_invalid_country_choice(client):
+def test_create_job_invalid_country_choice(auth_client):
     payload = {
         "title": "Software Engineer",
         "description": "Develop and maintain software applications.",
@@ -37,7 +57,7 @@ def test_create_job_invalid_country_choice(client):
         "country": "XX",  # Invalid country code
         "status": "OPEN",
     }
-    response = client.post("/jobs/", data=payload, format="json")
+    response = auth_client.post("/jobs/", data=payload, format="json")
     assert response.status_code == 400
     assert "country" in response.data
 
@@ -67,12 +87,12 @@ def test_get_job_detail(client):
 
 
 @pytest.mark.django_db
-def test_patch_update_job_success(client):
+def test_patch_update_job_success(auth_client):
     job = Job.objects.create(
         title="Old Title", description="Old", salary=80000, country="US", status="OPEN"
     )
     payload = {"title": "New Title", "salary": 85000}
-    response = client.patch(f"/jobs/{job.id}/", data=payload, format="json")
+    response = auth_client.patch(f"/jobs/{job.id}/", data=payload, format="json")
     assert response.status_code == 200
     job.refresh_from_db()
     assert job.title == "New Title"
@@ -80,28 +100,28 @@ def test_patch_update_job_success(client):
 
 
 @pytest.mark.django_db
-def test_patch_invalid_choice_returns_400(client):
+def test_patch_invalid_choice_returns_400(auth_client):
     job = Job.objects.create(
         title="Test", description="Test", salary=50000, country="US", status="OPEN"
     )
     payload = {"country": "XX"}  # invalid country
-    response = client.patch(f"/jobs/{job.id}/", data=payload, format="json")
+    response = auth_client.patch(f"/jobs/{job.id}/", data=payload, format="json")
     assert response.status_code == 400
     assert "country" in response.data
 
 
 @pytest.mark.django_db
-def test_delete_job_returns_204(client):
+def test_delete_job_returns_204(auth_client):
     job = Job.objects.create(
         title="To Delete", description="Delete me", salary=40000, country="AR", status="OPEN"
     )
-    response = client.delete(f"/jobs/{job.id}/")
+    response = auth_client.delete(f"/jobs/{job.id}/")
     assert response.status_code == 204
     assert not Job.objects.filter(pk=job.id).exists()
 
 
 @pytest.mark.django_db
-def test_create_job_with_existing_external_id_returns_existing_job(client):
+def test_create_job_with_existing_external_id_returns_existing_job(auth_client):
     existing_job = Job.objects.create(
         title="Existing Job",
         description="Already exists",
@@ -117,7 +137,52 @@ def test_create_job_with_existing_external_id_returns_existing_job(client):
         "status": "OPEN",
         "external_id": existing_job.external_id,
     }
-    response = client.post("/jobs/", data=payload, format="json")
+    response = auth_client.post("/jobs/", data=payload, format="json")
     assert response.status_code == 201
     assert response.data["id"] == existing_job.id
     assert response.data["title"] == existing_job.title
+
+@pytest.mark.django_db
+def test_search_jobs_by_title(api_client):
+    Job.objects.create(
+        title="Python Backend Developer",
+        description="Backend role",
+        status=StatusChoices.OPEN,
+        country=CountryChoices.US,
+    )
+    Job.objects.create(
+        title="Frontend Engineer",
+        description="Frontend role",
+        status=StatusChoices.OPEN,
+        country=CountryChoices.US,
+    )
+
+    response = api_client.get("/jobs/", {"q": "python"})
+
+    assert response.status_code == 200
+    assert "results" in response.data
+    assert len(response.data["results"]) == 1
+    assert response.data["results"][0]["title"] == "Python Backend Developer"
+
+@pytest.mark.django_db
+def test_filter_jobs_by_status(api_client):
+    Job.objects.create(
+        title="Open Job",
+        description="Open role",
+        status=StatusChoices.OPEN,
+        country=CountryChoices.US,
+    )
+    Job.objects.create(
+        title="Closed Job",
+        description="Closed role",
+        status=StatusChoices.CLOSED,
+        country=CountryChoices.US,
+    )
+
+    response = api_client.get("/jobs/", {"status": StatusChoices.OPEN})
+
+    assert response.status_code == 200
+    assert "results" in response.data
+    assert len(response.data["results"]) == 1
+    assert response.data["results"][0]["title"] == "Open Job"
+    assert response.data["results"][0]["status"] == StatusChoices.OPEN
