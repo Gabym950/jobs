@@ -1,5 +1,5 @@
+from django_filters import rest_framework as filters
 from rest_framework import viewsets
-from rest_framework.response import Response
 
 from .models import Job
 from .serializers import JobSerializer
@@ -8,6 +8,10 @@ from .serializers import JobSerializer
 class JobView(viewsets.ModelViewSet):
     queryset = Job.objects.all()
     serializer_class = JobSerializer
+    filter_backends = (
+        filters.DjangoFilterBackend,
+    )
+    filterset_fields = ("status", "company")
     http_method_names = ["get", "post", "head", "patch", "delete"]
 
     def get_queryset(self):
