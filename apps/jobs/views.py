@@ -16,7 +16,7 @@ class JobView(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Job.objects.filter(status="OPEN")
-        query = self.request.query_params.get("q", None).strip()
+        query = self.request.query_params.get("q", "").strip()
         if query:
             queryset = queryset.filter(title__icontains=query)  
         return queryset

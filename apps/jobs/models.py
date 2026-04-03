@@ -19,8 +19,8 @@ class Job(models.Model):
     external_id = models.CharField(max_length=100, null=True, blank=True, db_index=True)
     description = models.TextField()
     salary = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    country = models.CharField(choices=CountryChoices.choices, default=CountryChoices.US)
-    status = models.CharField(choices=StatusChoices.choices, default="OPEN")
+    country = models.CharField(max_length=2, choices=CountryChoices.choices, default=CountryChoices.US)
+    status = models.CharField(max_length=10, choices=StatusChoices.choices, default=StatusChoices.OPEN)
 
     def __str__(self):
         return self.title + " - " + self.country
