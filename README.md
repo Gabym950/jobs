@@ -1,97 +1,117 @@
-# Jobs API
+# Job Management API
 
-Minimal Django REST API for managing job offers.
-
-The project focuses on clear backend structure, business logic separation and
-testable behavior using Django and Django REST Framework.
+Backend API to manage job postings and applications, designed with a focus on clean architecture, scalability, and real-world backend practices.
 
 ---
 
-## Features
+## 🚀 Overview
 
-- Create job offers
-- Search jobs by keyword in the job title
-- Basic listing and detail endpoints
+This project simulates a real-world backend system where companies can publish job offers and candidates can interact with them.
+
+It focuses on building a maintainable API structure, handling business logic clearly, and preparing the system to scale with new features.
 
 ---
 
-## API
+## 🧩 Features
 
-### Create job
+- Create, update, and delete job postings
+- List and retrieve jobs
+- Search jobs by title (`?q=python`)
+- Filter jobs by status and other fields
+- Pagination support
+- Authentication with JWT
+- Structured error handling
+- API documentation with Swagger/OpenAPI
 
-POST /jobs/
+---
 
-Example:
+## 🛠️ Tech Stack
 
-```json
-{
-  "title": "Software Engineer",
-  "description": "Develop and maintain software applications",
-  "salary": 90000,
-  "country": "US",
-  "status": "OPEN"
-}
+- Python
+- Django
+- Django REST Framework
+- PostgreSQL
+- Docker
+- drf-spectacular (Swagger/OpenAPI)
+- SimpleJWT (authentication)
+- django-filter
+
+---
+
+## 🏗️ Architecture
+
+The project is structured to separate concerns and keep business logic independent:
+
+- **Views** → Handle HTTP layer
+- **Services** → Business logic
+- **Models** → Data layer
+- **Serializers** → Data validation and transformation
+
+This approach makes the code easier to maintain, test, and extend.
+
+---
+
+## 🔍 API Examples
+
+### Get all jobs
+
+```
+GET /jobs/
 ```
 
 ---
 
 ### Search jobs
 
-GET /jobs/search/?q=engineer
-
-The search is case-insensitive and matches job titles.
-
----
-
-## Project structure
-
-```text
-apps/jobs/
-    models.py
-    serializer.py
-    views.py
-    services.py
-    tests.py
+```
+GET /jobs/?q=python
 ```
 
-- models.py contains persistence models.
-- serializer.py handles request/response validation.
-- views.py exposes the HTTP API.
-- services.py contains application and business rules.
-- tests.py contains API and behavior tests.
+Returns jobs filtered by title using case-insensitive search.
 
 ---
 
-## Tests
+### Filter jobs
 
-The project includes API tests using pytest and Django REST Framework’s test tools.
-
-Main scenarios covered:
-
-- job creation
-- validation errors
-- listing and detail endpoints
-- update and delete operations
-
----
-
-## Installation
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-
-pip install -r requirements.txt -r requirements-dev.txt
 ```
-
-```bash
-python manage.py migrate
-python manage.py runserver
+GET /jobs/?status=OPEN
 ```
 
 ---
 
-## Running tests
+### Pagination
+
+```
+GET /jobs/?page=2&page_size=10
+```
+
+---
+
+## 🔐 Authentication
+
+This API uses JWT authentication.
+
+Example:
+
+```
+Authorization: Bearer <your_token>
+```
+
+---
+
+## 📄 API Documentation
+
+Swagger UI available at:
+
+```
+/api/schema/swagger-ui/
+```
+
+---
+
+## 🧪 Testing
+
+Run tests with:
 
 ```bash
 pytest
@@ -99,22 +119,34 @@ pytest
 
 ---
 
-## Example usage
-
-Create a job:
+## 🐳 Run with Docker
 
 ```bash
-curl -X POST http://localhost:8000/jobs/   -H "Content-Type: application/json"   -d '{
-    "title": "Backend Engineer",
-    "description": "Build APIs",
-    "salary": 80000,
-    "country": "AR",
-    "status": "OPEN"
-  }'
+docker-compose up --build
 ```
 
-Search jobs:
+---
 
-```bash
-curl "http://localhost:8000/jobs/search/?q=backend"
-```
+## 🎯 What I focused on
+
+- Designing clean and maintainable backend architecture
+- Separating business logic from framework logic
+- Building scalable and extensible APIs
+- Handling real-world backend scenarios (search, filtering, pagination)
+- Keeping the system ready for future growth
+
+---
+
+## 🚧 Possible Improvements
+
+- Add background jobs for async processing
+- Introduce event-driven patterns
+- Improve observability (logging, tracing)
+- Add role-based permissions
+- CI/CD pipeline improvements
+
+---
+
+## 📌 Notes
+
+This project is intended as a portfolio piece to demonstrate backend engineering skills and architectural thinking rather than a fully production-ready system.
