@@ -48,8 +48,9 @@ def test_get_jobs_list_returns_items(client):
     Job.objects.create(title="Dev B", description="B", salary=60000, country="CA", status="OPEN")
     response = client.get("/jobs/")
     assert response.status_code == 200
-    assert len(response.data) >= 2
-    titles = [j["title"] for j in response.data]
+    assert "results" in response.data
+    assert len(response.data["results"]) >= 2
+    titles = [j["title"] for j in response.data["results"]]
     assert "Dev A" in titles
     assert "Dev B" in titles
 
